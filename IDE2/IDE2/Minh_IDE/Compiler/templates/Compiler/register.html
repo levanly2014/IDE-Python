@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <title>Register - Minh IDE</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #ffffff;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+
+        .register-wrapper {
+            width: 320px;
+        }
+
+        .register-box {
+            border: 1px solid #d3d3d3;
+            background-color: #fcfcfc;
+            border-radius: 6px;
+            padding: 18px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+        }
+
+        .input-group {
+            display: flex;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+
+        .input-group i {
+            width: 25px;
+            font-size: 16px;
+            color: #333;
+            text-align: center;
+            margin-right: 8px;
+        }
+
+        .input-group input {
+            flex: 1;
+            padding: 8px 10px;
+            border: 1px solid #cccccc;
+            border-radius: 4px;
+            font-size: 14px;
+            color: #555;
+            outline: none;
+        }
+
+        .input-group input::placeholder {
+            color: #888;
+        }
+
+        .btn-container {
+            display: flex;
+            justify-content: flex-end;
+            margin-top: 15px;
+        }
+
+        .btn-register {
+            background-color: #28a745;
+            color: white;
+            border: 1px solid #1e7e34;
+            padding: 8px 18px;
+            font-size: 15px;
+            font-weight: bold;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        .btn-register:hover {
+            background-color: #218838;
+        }
+
+        .login-link {
+            margin-top: 10px;
+            display: block;
+            color: #2b6095;
+            text-decoration: none;
+            font-size: 14px;
+        }
+
+        .login-link:hover {
+            text-decoration: underline;
+        }
+
+        .social-section {
+            margin-top: 20px;
+        }
+
+        .social-title {
+            font-weight: bold;
+            font-size: 15px;
+            margin-bottom: 10px;
+            color: #000;
+        }
+
+        .social-icons {
+            display: flex;
+            gap: 10px;
+        }
+
+        .social-btn {
+            width: 48px;
+            height: 48px;
+            border-radius: 8px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: white;
+            font-size: 26px;
+            text-decoration: none;
+        }
+
+        .btn-google { background-color: #d9534f; }
+        .btn-facebook { background-color: #2b4782; }
+        .btn-github { background-color: #000000; }
+        
+        .error-msg {
+            color: #d9534f;
+            font-size: 13px;
+            margin-bottom: 10px;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="register-wrapper">
+        <form method="POST">
+            {% csrf_token %}
+            <div class="register-box">
+                {% if error %}
+                    <div class="error-msg">{{ error }}</div>
+                {% endif %}
+
+                <div class="input-group">
+                    <i class="fa-solid fa-user"></i>
+                    <input type="text" name="username" placeholder="Username" required>
+                </div>
+
+                <div class="input-group">
+                    <i class="fa-solid fa-envelope"></i>
+                    <input type="email" name="email" placeholder="Email Address" required>
+                </div>
+
+                <div class="input-group">
+                    <i class="fa-solid fa-lock"></i>
+                    <input type="password" name="password" placeholder="Password" required>
+                </div>
+
+                <div class="input-group">
+                    <i class="fa-solid fa-key"></i>
+                    <input type="password" name="confirm_password" placeholder="Confirm Password" required>
+                </div>
+
+                <div class="btn-container">
+                    <button type="submit" class="btn-register">Register!</button>
+                </div>
+            </div>
+        </form>
+
+        <a href="{% url 'login' %}" class="login-link">Already have an account? Log in here</a>
+
+        <div class="social-section">
+            <div class="social-title">Or register with...</div>
+            <div class="social-icons">
+                <a href="#" class="social-btn btn-google"><i class="fa-brands fa-google-plus-g"></i></a>
+                <a href="#" class="social-btn btn-facebook"><i class="fa-brands fa-facebook-f"></i></a>
+                <a href="#" class="social-btn btn-github"><i class="fa-brands fa-github"></i></a>
+            </div>
+        </div>
+    </div>
+
+</body>
+</html>
