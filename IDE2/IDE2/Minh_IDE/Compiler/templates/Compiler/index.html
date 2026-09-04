@@ -4,47 +4,43 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Mini Python IDE - Minh IDE</title>
-    <!-- FontAwesome, CodeMirror & Brython Engine -->
+    <!-- FontAwesome, CodeMirror & Engines (Brython + Pyodide) -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/codemirror.min.css">
-    
     <script src="https://cdnjs.cloudflare.com/ajax/libs/brython/3.12.0/brython.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/brython/3.12.0/brython_stdlib.js"></script>
-
+    <!-- Pyodide cho NumPy, Pandas, Matplotlib,... -->
+    <script src="https://cdn.jsdelivr.net/pyodide/v0.26.4/full/pyodide.js"></script>
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; }
         body { font-family: Arial, sans-serif; background-color: #ffffff; color: #000000; height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
-
         /* Header */
         .header { display: flex; justify-content: space-between; align-items: center; background-color: #f8f9fa; padding: 8px 16px; border-bottom: 1px solid #d3d3d3; }
         .header h2 { font-size: 15px; font-weight: bold; color: #000; }
         .logout-btn { color: #dc3545; text-decoration: none; font-size: 13px; font-weight: bold; }
         .logout-btn:hover { text-decoration: underline; }
-
         /* Toolbar */
         .toolbar { display: flex; align-items: center; gap: 8px; background-color: #f1f3f5; padding: 6px 16px; border-bottom: 1px solid #d3d3d3; }
         .btn { background-color: #ffffff; color: #000000; border: 1px solid #cccccc; padding: 5px 12px; font-size: 13px; font-weight: bold; border-radius: 4px; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; }
         .btn:hover { background-color: #e9ecef; }
         .btn-primary { background-color: #28a745; color: #ffffff; border: 1px solid #1e7e34; }
         .btn-primary:hover { background-color: #218838; }
+        .btn-danger { background-color: #dc3545; color: #ffffff; border: 1px solid #bd2130; }
+        .btn-danger:hover { background-color: #c82333; }
+        .btn:disabled { opacity: 0.6; cursor: not-allowed; }
         .status-label { margin-left: auto; font-size: 13px; color: #555; font-weight: bold; }
-
         /* Workspace Split */
         .workspace { display: flex; flex: 1; height: calc(100vh - 85px); }
         .left-frame, .terminal-frame { flex: 1; display: flex; flex-direction: column; background-color: #ffffff; border-right: 1px solid #d3d3d3; overflow: hidden; }
         .terminal-frame { border-right: none; }
-
         .editor-label, .terminal-label { background-color: #f8f9fa; color: #333; font-size: 12px; font-weight: bold; padding: 6px 12px; border-bottom: 1px solid #d3d3d3; }
-
         /* CodeMirror Editor */
         .CodeMirror { flex: 1; height: 100% !important; font-family: 'Consolas', 'Courier New', monospace; font-size: 14px; background-color: #ffffff !important; color: #000000 !important; }
-
         /* Terminal Style (Light Mode) */
         .terminal-container { flex: 1; background-color: #ffffff; padding: 10px; font-family: 'Consolas', 'Courier New', monospace; font-size: 13px; overflow-y: auto; color: #000000; white-space: pre-wrap; word-break: break-all; cursor: text; }
         .terminal-command { color: #0056b3; font-weight: bold; }
         .terminal-error { color: #d9534f; font-weight: bold; }
         .terminal-success { color: #28a745; font-weight: bold; }
-        
         .terminal-input-inline {
             background: transparent;
             border: none;
@@ -59,7 +55,6 @@
     </style>
 </head>
 <body onload="brython()">
-
     <!-- Header -->
     <div class="header">
         <h2>Xin chào, {{ user.username }}!</h2>
@@ -69,8 +64,9 @@
     <!-- Toolbar -->
     <div class="toolbar">
         <button class="btn btn-primary" id="run-btn" onclick="runPythonCode()"><i class="fa-solid fa-play"></i> ▶ Run (F5)</button>
+        <button class="btn btn-danger" id="stop-btn" onclick="stopPythonCode()" disabled><i class="fa-solid fa-stop"></i> ◼ Stop</button>
         <button class="btn" onclick="clearTerminal()">Clear Terminal</button>
-        <span class="status-label" id="status-label">Ready</span>
+        <span class="status-label" id="status-label">Initializing Pyodide (NumPy Engine)...</span>
     </div>
 
     <!-- Workspace -->
@@ -78,12 +74,17 @@
         <!-- Editor (Trái) -->
         <div class="left-frame">
             <div class="editor-label">main.py</div>
-            <textarea id="code-editor" name="code">{% if code %}{{ code }}{% else %}name = input("What's your name? ")
-print(f"Hello, {name}!")
+            <textarea id="code-editor" name="code">{% if code %}{{ code }}{% else %}import numpy as np
 
-n = int(input("Enter a number: "))
-for i in range(n):
-    print(i){% endif %}</textarea>
+# Tạo mảng NumPy
+a = np.array([1, 2, 3, 4, 5])
+b = np.array([10, 20, 30, 40, 50])
+
+print("Array A:", a)
+print("Array B:", b)
+print("A + B =", a + b)
+print("Mean of A:", np.mean(a))
+print("Square Root:", np.sqrt(b)){% endif %}</textarea>
         </div>
 
         <!-- Terminal Interactive (Phải) -->
@@ -97,7 +98,7 @@ for i in range(n):
     <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/codemirror.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/mode/python/python.min.js"></script>
 
-    <!-- JS Xử lý Terminal & Brython Wrapper -->
+    <!-- JS Xử lý Terminal & Engines -->
     <script>
         const editor = CodeMirror.fromTextArea(document.getElementById("code-editor"), {
             mode: "python",
@@ -109,6 +110,30 @@ for i in range(n):
 
         const statusLabel = document.getElementById("status-label");
         const terminal = document.getElementById("terminal");
+        const runBtn = document.getElementById("run-btn");
+        const stopBtn = document.getElementById("stop-btn");
+
+        let pyodideInstance = null;
+        let isPyodideLoading = false;
+        let isPyodideRunning = false;
+
+        // Khởi tạo Pyodide & Tải trước NumPy ngầm ở background
+        async function initPyodide() {
+            try {
+                isPyodideLoading = true;
+                pyodideInstance = await loadPyodide();
+                writeTerminal("[System] Loading NumPy engine...\n", "command");
+                await pyodideInstance.loadPackage("numpy");
+                statusLabel.textContent = "Ready (NumPy Loaded)";
+                writeTerminal("[System] NumPy is ready to use!\n\n", "success");
+            } catch (err) {
+                console.error("Pyodide Init Error:", err);
+                statusLabel.textContent = "Ready (Brython only)";
+            } finally {
+                isPyodideLoading = false;
+            }
+        }
+        initPyodide();
 
         document.addEventListener('keydown', function(e) {
             if (e.key === 'F5') {
@@ -134,9 +159,9 @@ for i in range(n):
             if (activeInput) activeInput.focus();
         }
 
-        // Tạo khung gõ trực tiếp ngay trong Terminal khi input() được gọi
+        // Khung nhập dữ liệu trực tiếp trong Terminal
         window.customInput = function(promptText) {
-            return new Promise((resolve) => {
+            return new Promise((resolve, reject) => {
                 if (promptText) writeTerminal(promptText);
 
                 const input = document.createElement("input");
@@ -148,24 +173,102 @@ for i in range(n):
                 input.focus();
                 terminal.scrollTop = terminal.scrollHeight;
 
-                input.addEventListener("keydown", function(e) {
+                const onKeydown = function(e) {
                     if (e.key === "Enter") {
                         const val = input.value;
                         const textNode = document.createTextNode(val + "\n");
                         terminal.replaceChild(textNode, input);
                         resolve(val);
                     }
-                });
+                };
+
+                input.addEventListener("keydown", onKeydown);
+
+                window._rejectInput = function() {
+                    if (terminal.contains(input)) {
+                        terminal.removeChild(input);
+                    }
+                    reject(new Error("KeyboardInterrupt: Process stopped by user"));
+                };
             });
         };
 
-        function runPythonCode() {
-            statusLabel.textContent = "Running...";
+        function setRunningState(running) {
+            runBtn.disabled = running;
+            stopBtn.disabled = !running;
+            statusLabel.textContent = running ? "Running..." : "Ready";
+        }
+
+        // Chạy code bằng Pyodide
+        async function runWithPyodide(code) {
+            setRunningState(true);
+            isPyodideRunning = true;
             clearTerminal();
-            writeTerminal(">>> python main.py\n", "command");
-            
-            // Gọi hàm thực thi Python của Brython
-            window.executeBrython(editor.getValue());
+            writeTerminal(">>> python main.py (Pyodide - NumPy Engine)\n", "command");
+
+            const startTime = performance.now();
+
+            // Redirect stdout & stderr về Terminal
+            pyodideInstance.setStdout({ batched: (text) => writeTerminal(text + "\n") });
+            pyodideInstance.setStderr({ batched: (text) => writeTerminal(text + "\n", "error") });
+
+            // Ghi đè hàm input() bằng JavaScript prompt/customInput
+            pyodideInstance.globals.set("input", (promptText) => {
+                return prompt(promptText || "Input:");
+            });
+
+            try {
+                // Tự động quét và tải các thư viện chưa có (ví dụ: pandas, matplotlib, scipy)
+                await pyodideInstance.loadPackagesFromImports(code);
+                await pyodideInstance.runPythonAsync(code);
+                const elapsed = ((performance.now() - startTime) / 1000).toFixed(3);
+                writeTerminal(`\n[Process finished in ${elapsed}s]\n`, "success");
+            } catch (err) {
+                writeTerminal(`\n${err.message || err}\n`, "error");
+            } finally {
+                setRunningState(false);
+                isPyodideRunning = false;
+            }
+        }
+
+        // Điều hướng thông minh giữa Brython và Pyodide
+        function runPythonCode() {
+            const code = editor.getValue();
+
+            // Quét nếu code gọi các thư viện C-extension như numpy, pandas, matplotlib, scipy
+            const requiresHeavyLibs = /import\s+(numpy|pandas|matplotlib|scipy|sklearn)|from\s+(numpy|pandas|matplotlib|scipy|sklearn)/.test(code);
+
+            if (requiresHeavyLibs) {
+                if (isPyodideLoading) {
+                    alert("Hệ thống đang tải thư viện NumPy, vui lòng đợi trong giây lát...");
+                    return;
+                }
+                if (pyodideInstance) {
+                    runWithPyodide(code);
+                } else {
+                    alert("Pyodide chưa thể khởi tạo. Đang chạy lại bằng Brython...");
+                    runWithBrython(code);
+                }
+            } else {
+                runWithBrython(code);
+            }
+        }
+
+        function runWithBrython(code) {
+            setRunningState(true);
+            clearTerminal();
+            writeTerminal(">>> python main.py (Brython Engine)\n", "command");
+            window.executeBrython(code);
+        }
+
+        function stopPythonCode() {
+            if (isPyodideRunning) {
+                writeTerminal("\nKeyboardInterrupt: Stopped Pyodide Execution.\n", "error");
+                setRunningState(false);
+                isPyodideRunning = false;
+            } else if (window.stopBrython) {
+                window.stopBrython();
+            }
         }
     </script>
 
@@ -184,37 +287,53 @@ for i in range(n):
         sys.stdout = TerminalOutput()
         sys.stderr = TerminalOutput()
 
+        is_stopped = False
+
         async def custom_input(prompt_text=""):
+            global is_stopped
+            if is_stopped:
+                raise Exception("KeyboardInterrupt: Process stopped by user")
             res = await window.customInput(prompt_text)
+            if is_stopped:
+                raise Exception("KeyboardInterrupt: Process stopped by user")
             return res
 
         async def run_async_code(code_str):
+            global is_stopped
+            is_stopped = False
             start_time = time.time()
             try:
-                # Thay thế hàm input() chuẩn bằng custom_input bất đồng bộ
                 local_env = {"input": custom_input}
-                
-                # Chuyển đổi mã nguồn để tương thích với async input
                 exec_code = f"async def __main__():\n"
                 for line in code_str.split("\n"):
                     if "input(" in line:
                         line = line.replace("input(", "await input(")
                     exec_code += f"    {line}\n"
-                
                 exec(exec_code, local_env)
                 await local_env["__main__"]()
-                
                 elapsed = round(time.time() - start_time, 3)
                 window.writeTerminal(f"\n[Process finished in {elapsed}s]\n", "success")
             except Exception as e:
                 window.writeTerminal(f"\n{type(e).__name__}: {e}\n", "error")
             finally:
-                window.document.getElementById("status-label").textContent = "Ready"
+                window.setRunningState(False)
 
         def execute_bridge(code_str):
             aio.run(run_async_code(code_str))
 
+        def stop_bridge():
+            global is_stopped
+            is_stopped = True
+            if hasattr(window, '_rejectInput'):
+                try:
+                    window._rejectInput()
+                except Exception:
+                    pass
+            window.writeTerminal("\nKeyboardInterrupt: Execution stopped by user.\n", "error")
+            window.setRunningState(False)
+
         window.executeBrython = execute_bridge
+        window.stopBrython = stop_bridge
     </script>
 </body>
 </html>
